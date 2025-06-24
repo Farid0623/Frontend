@@ -1,0 +1,29 @@
+.menu {
+    display: flex;
+    gap: 18px;
+    background: #f5f8fa;
+    padding: 24px 0 12px 8vw;
+    border-bottom: 1.5px solid #eaeaea;
+}
+
+.menuItem {
+    color: #555;
+    font-size: 1.1rem;
+    text-decoration: none;
+    padding: 8px 25px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.2px;
+}
+
+.menuItem:hover {
+    background: #eaf1fb;
+    color: #1766cf;
+}
+
+.active {
+    background: #1976d2;
+    color: #fff !important;
+    font-weight: 600;
+}

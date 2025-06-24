@@ -1,83 +1,107 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import styles from "../styles.module.css";
-import AsignaturaForm, { AsignaturaDTO } from "../AsignaturaForm";
 
-export default function Page({ params }: { params: { id: string } }) {
-    const [asignatura, setAsignatura] = useState<AsignaturaDTO>();
+type AsignaturaDTO = {
+    id?: string;
+    codigo: string;
+    nombre: string;
+    creditos: number;
+    horasTeoricas: number;
+    horasPracticas: number;
+    descripcion: string;
+    activa: boolean;
+    estado: string;
+    prerrequisitos: string[];
+    horarios: string[];
+    numeroSemestre: number;
+};
+
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = React.use(params);
+    const [asignatura, setAsignatura] = useState<AsignaturaDTO | null>(null);
     const [loading, setLoading] = useState(true);
-    const [respuesta, setRespuesta] = useState<any>(null);
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const editMode = !!searchParams.get("edit");
 
     useEffect(() => {
-        fetch("http://localhost:8080/api/asignaturas/" + params.id)
+        fetch(`http://localhost:8080/api/asignaturas/${id}`)
             .then((r) => r.json())
             .then(setAsignatura)
             .finally(() => setLoading(false));
-    }, [params.id]);
-
-    const handleEdit = async (dto: AsignaturaDTO) => {
-        setRespuesta(null);
-        try {
-            const res = await fetch("http://localhost:8080/api/asignaturas/" + params.id, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dto),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setRespuesta({ success: true, message: "Asignatura actualizada correctamente." });
-                setTimeout(() => router.push("/asignaturas"), 1500);
-            } else {
-                setRespuesta({ error: data.message || "Error al actualizar la asignatura" });
-            }
-        } catch {
-            setRespuesta({ error: "Error al conectar con el backend" });
-        }
-    };
+    }, [id]);
 
     if (loading) return <div className={styles.detailSection}>Cargando...</div>;
     if (!asignatura) return <div className={styles.detailSection}>No encontrada.</div>;
 
-    if (editMode) {
-        return (
-            <div className={styles.detailSection}>
-                <button className={styles.goBackBtn} onClick={() => router.back()}>← Volver</button>
-                <h2>Editar asignatura</h2>
-                <AsignaturaForm initialData={asignatura} onSubmit={handleEdit} submitText="Guardar cambios" />
-                {respuesta && (
-                    <div className={styles.respuesta}>
-                        <b>{respuesta.success ? "Éxito:" : "Error:"}</b> {respuesta.message || respuesta.error}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
     return (
         <div className={styles.detailSection}>
-            <button className={styles.goBackBtn} onClick={() => router.back()}>← Volver</button>
-            <h2>Detalle de asignatura</h2>
-            <div className={styles.card}>
-                <b>Código:</b> {asignatura.codigo} <br />
-                <b>Nombre:</b> {asignatura.nombre} <br />
-                <b>Créditos:</b> {asignatura.creditos} <br />
-                <b>Horas Teóricas:</b> {asignatura.horasTeoricas} <br />
-                <b>Horas Prácticas:</b> {asignatura.horasPracticas} <br />
-                <b>Descripción:</b> {asignatura.descripcion} <br />
-                <b>Activa:</b> {asignatura.activa ? "Sí" : "No"} <br />
-                <b>Estado:</b> {asignatura.estado} <br />
-                <b>Semestre:</b> {asignatura.numeroSemestre} <br />
-                <b>Prerrequisitos:</b> {asignatura.prerrequisitos?.join(", ") || "Ninguno"} <br />
-                <b>Horarios:</b>
-                <ul>
-                    {asignatura.horarios && asignatura.horarios.length > 0
-                        ? asignatura.horarios.map((h, i) => <li key={i}>{h}</li>)
-                        : <li>Ninguno</li>}
-                </ul>
+            <button className={styles.goBackBtn} onClick={() => router.push("/asignatura")}>
+                ← Volver al listado
+            </button>
+            <div className={styles.card} style={{ maxWidth: 700, margin: "0 auto" }}>
+                <h2 className={styles.titulo}>Detalle de la Asignatura</h2>
+                <table className={styles.table}>
+                    <tbody>
+                    <tr>
+                        <th>Código</th>
+                        <td>{asignatura.codigo}</td>
+                    </tr>
+                    <tr>
+                        <th>Nombre</th>
+                        <td>{asignatura.nombre}</td>
+                    </tr>
+                    <tr>
+                        <th>Semestre</th>
+                        <td>{asignatura.numeroSemestre}</td>
+                    </tr>
+                    <tr>
+                        <th>Créditos</th>
+                        <td>{asignatura.creditos}</td>
+                    </tr>
+                    <tr>
+                        <th>Horas Teóricas</th>
+                        <td>{asignatura.horasTeoricas}</td>
+                    </tr>
+                    <tr>
+                        <th>Horas Prácticas</th>
+                        <td>{asignatura.horasPracticas}</td>
+                    </tr>
+                    <tr>
+                        <th>Descripción</th>
+                        <td>{asignatura.descripcion}</td>
+                    </tr>
+                    <tr>
+                        <th>Activa</th>
+                        <td>{asignatura.activa ? "Sí" : "No"}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado</th>
+                        <td>{asignatura.estado}</td>
+                    </tr>
+                    <tr>
+                        <th>Prerrequisitos</th>
+                        <td>
+                            {asignatura.prerrequisitos && asignatura.prerrequisitos.length > 0
+                                ? asignatura.prerrequisitos.join(", ")
+                                : "Ninguno"}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Horarios</th>
+                        <td>
+                            {asignatura.horarios && asignatura.horarios.length > 0
+                                ? (
+                                    <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                        {asignatura.horarios.map((h, i) => <li key={i}>{h}</li>)}
+                                    </ul>
+                                )
+                                : "Ninguno"}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

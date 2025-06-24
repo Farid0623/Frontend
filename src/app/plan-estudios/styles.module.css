@@ -1,0 +1,204 @@
+.body {
+    min-height: 100vh;
+    background: #f6f8fc;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.navbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 28px 0 12px 10vw;
+    background: transparent;
+    gap: 16px;
+}
+
+.navlink {
+    color: #666;
+    font-size: 1.05rem;
+    text-decoration: none;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+.navlink:hover {
+    background: #eaf1fb;
+    color: #1766cf;
+}
+.active {
+    background: #1976d2 !important;
+    color: #fff !important;
+}
+
+.headerTitle {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin: 32px 0 14px 8vw;
+    color: #222d3d;
+}
+
+.section {
+    margin: 0 auto 38px auto;
+    max-width: 1100px;
+}
+
+.sectionTitle {
+    font-size: 1.18rem;
+    font-weight: 600;
+    color: #1766cf;
+    margin-bottom: 10px;
+}
+
+.card {
+    background: #fcfcfd;
+    border-radius: 11px;
+    padding: 32px 28px 18px 28px;
+    box-shadow: 0 3px 16px #0001;
+    margin-bottom: 24px;
+    border: 1px solid #e6e6e6;
+}
+
+.formRow {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+.formRow label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #384d6e;
+    font-size: 1.06rem;
+}
+
+.formRow input[type="text"],
+.formRow input[type="number"],
+.formRow textarea,
+.formRow select {
+    padding: 9px 12px;
+    border: 1px solid #cbd4e1;
+    border-radius: 5px;
+    font-size: 1rem;
+    background: #f7fbff;
+    font-family: inherit;
+    color: #223;
+    outline: none;
+    margin-top: 2px;
+    transition: border 0.18s;
+}
+.formRow input:focus,
+.formRow textarea:focus {
+    border: 1.5px solid #1976d2;
+}
+
+.formRowCheckbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.formRowCheckbox label {
+    font-weight: 500;
+    color: #384d6e;
+    font-size: 1.06rem;
+}
+
+.formRowCheckbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.buttonRow {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.btn {
+    padding: 8px 22px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.btnPrimary {
+    background: #1976d2;
+    color: white;
+}
+.btnPrimary:disabled {
+    background: #a3c5f7;
+}
+
+.btnSecondary {
+    background: #e34c4c;
+    color: white;
+}
+.btnSecondary:disabled {
+    background: #e3a6a6;
+}
+
+.btnEdit {
+    background: #ffc107;
+    color: #333;
+    margin-right: 7px;
+}
+.btnEdit:disabled {
+    background: #ffe9a6;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 8px #0000000a;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 1rem;
+    min-width: 900px;
+}
+
+.table th,
+.table td {
+    border: 1px solid #e3e7ef;
+    padding: 11px 8px;
+    text-align: left;
+}
+
+.table th {
+    background: #f7fafd;
+    color: #2c3d57;
+    font-weight: 600;
+    font-size: 1.01rem;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 7px;
+}
+
+.activeYes {
+    background: #e1f7e7;
+    color: #188c4e;
+    padding: 2px 9px;
+    border-radius: 7px;
+    font-size: 0.99rem;
+    font-weight: 500;
+}
+.activeNo {
+    background: #fbeee7;
+    color: #d12b18;
+    padding: 2px 9px;
+    border-radius: 7px;
+    font-size: 0.99rem;
+    font-weight: 500;
+}
