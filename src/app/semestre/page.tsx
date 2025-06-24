@@ -1,50 +1,59 @@
 "use client";
-import { useEffect, useState } from "react";
-import MainMenu from "@/components/MainMenu";
+import { useState } from "react";
 import styles from "./styles.module.css";
 
 type SemestreDTO = {
-    id?: string;
+    _id: string;
     numero: number;
     nombre: string;
     descripcion: string;
-    asignaturas: string[]; // IDs de asignaturas
+    asignaturas: string[];
+    asignaturaInput: string;
     planEstudiosId: string;
 };
 
-const emptyForm: SemestreDTO = {
-    numero: 1,
-    nombre: "",
-    descripcion: "",
-    asignaturas: [],
-    planEstudiosId: "",
-};
-
 export default function SemestrePage() {
-    const [semestres, setSemestres] = useState<SemestreDTO[]>([]);
-    const [form, setForm] = useState<SemestreDTO>({ ...emptyForm });
-    const [loading, setLoading] = useState(false);
-    const [editId, setEditId] = useState<string | null>(null);
+    const [form, setForm] = useState<SemestreDTO>({
+        _id: "6857aefa590352475fed1327",
+        numero: 1,
+        nombre: "Primer Semestre",
+        descripcion: "Semestre inicial para todos los estudiantes.",
+        asignaturas: ["MAT101", "QUI103"],
+        asignaturaInput: "",
+        planEstudiosId: "IS2025",
+    });
 
-    const fetchSemestres = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch("http://localhost:8080/api/semestres");
-            const data = await res.json();
-            setSemestres(data);
-        } catch {
-            alert("No se pudieron cargar los semestres.");
+    // Manejo de tags de asignaturas
+    const handleAsignaturaKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === ",") && form.asignaturaInput.trim()) {
+            e.preventDefault();
+            if (!form.asignaturas.includes(form.asignaturaInput.trim())) {
+                setForm((prev) => ({
+                    ...prev,
+                    asignaturas: [...prev.asignaturas, form.asignaturaInput.trim()],
+                    asignaturaInput: "",
+                }));
+            }
         }
-        setLoading(false);
+        if (e.key === "Backspace" && form.asignaturaInput === "" && form.asignaturas.length > 0) {
+            setForm((prev) => ({
+                ...prev,
+                asignaturas: prev.asignaturas.slice(0, -1),
+            }));
+        }
+    };
+    const handleAsignaturaInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm((prev) => ({ ...prev, asignaturaInput: e.target.value.replace(",", "") }));
+    };
+    const removeAsignatura = (i: number) => {
+        setForm((prev) => ({
+            ...prev,
+            asignaturas: prev.asignaturas.filter((_, idx) => idx !== i),
+        }));
     };
 
-    useEffect(() => {
-        fetchSemestres();
-    }, []);
-
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    // Manejo de campos normales
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
         setForm((prev) => ({
             ...prev,
@@ -52,199 +61,99 @@ export default function SemestrePage() {
         }));
     };
 
-    const handleAsignaturasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            asignaturas: value
-                .split(",")
-                .map((v) => v.trim())
-                .filter((v) => v !== ""),
-        }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        try {
-            if (editId) {
-                await fetch(`http://localhost:8080/api/semestres/${editId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(form),
-                });
-            } else {
-                await fetch("http://localhost:8080/api/semestres", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(form),
-                });
-            }
-            setForm({ ...emptyForm });
-            setEditId(null);
-            fetchSemestres();
-        } catch {
-            alert("Error al guardar el semestre.");
-        }
-        setLoading(false);
-    };
-
-    const handleDelete = async (id?: string) => {
-        if (!id) return;
-        if (!confirm("¿Seguro que deseas eliminar este semestre?")) return;
-        setLoading(true);
-        await fetch(`http://localhost:8080/api/semestres/${id}`, {
-            method: "DELETE",
-        });
-        fetchSemestres();
-        setLoading(false);
-    };
-
-    const handleEdit = (sem: SemestreDTO) => {
-        setEditId(sem.id ?? null);
-        setForm({ ...sem, asignaturas: sem.asignaturas ?? [] });
-    };
-
-    const handleCancelEdit = () => {
-        setEditId(null);
-        setForm({ ...emptyForm });
+        alert("Semestre guardado (simulación):\n" + JSON.stringify({
+            ...form,
+            asignaturaInput: undefined,
+        }, null, 2));
+        // Aquí puedes conectar con tu API
     };
 
     return (
         <div className={styles.body}>
-            <MainMenu />
-            <h1 className={styles.headerTitle}>Gestión de Semestres</h1>
+            <div className={styles.sectionHeader}>
+                <h1 className={styles.title}>Gestión de Semestres</h1>
+            </div>
             <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>
-                    {editId ? "Editar semestre" : "Crear nuevo semestre"}
-                </h2>
+                <h2 className={styles.sectionTitle}>Editar semestre</h2>
                 <form className={styles.card} onSubmit={handleSubmit}>
+                    <div className={styles.formRow}>
+                        <label>ID (sólo lectura)</label>
+                        <input type="text" name="_id" value={form._id} readOnly />
+                    </div>
                     <div className={styles.formRow}>
                         <label>Número</label>
                         <input
                             type="number"
                             name="numero"
+                            min={1}
                             value={form.numero}
                             onChange={handleChange}
-                            min={1}
                             required
                         />
                     </div>
                     <div className={styles.formRow}>
                         <label>Nombre</label>
                         <input
+                            type="text"
                             name="nombre"
                             value={form.nombre}
                             onChange={handleChange}
                             required
-                            maxLength={60}
                         />
                     </div>
                     <div className={styles.formRow}>
                         <label>Descripción</label>
                         <textarea
                             name="descripcion"
+                            rows={2}
                             value={form.descripcion}
                             onChange={handleChange}
-                            rows={2}
-                            maxLength={200}
+                            required
                         />
                     </div>
                     <div className={styles.formRow}>
-                        <label>Asignaturas (IDs separados por coma)</label>
-                        <input
-                            name="asignaturas"
-                            value={form.asignaturas.join(",")}
-                            onChange={handleAsignaturasChange}
-                            placeholder="Ej: MAT101,QUI103"
-                        />
+                        <label>Asignaturas (código, presiona Enter o coma para agregar)</label>
+                        <div className={styles.tagsInputWrapper}>
+                            {form.asignaturas.map((tag, idx) => (
+                                <span className={styles.tag} key={idx}>
+                  {tag}
+                                    <button
+                                        type="button"
+                                        className={styles.removeTagBtn}
+                                        onClick={() => removeAsignatura(idx)}
+                                        title="Quitar asignatura"
+                                    >
+                    ×
+                  </button>
+                </span>
+                            ))}
+                            <input
+                                className={styles.asignaturaInput}
+                                value={form.asignaturaInput}
+                                onChange={handleAsignaturaInputChange}
+                                onKeyDown={handleAsignaturaKeyDown}
+                                placeholder="Ej: MAT101"
+                            />
+                        </div>
                     </div>
                     <div className={styles.formRow}>
-                        <label>ID del Plan de Estudios</label>
+                        <label>Plan de Estudios ID</label>
                         <input
+                            type="text"
                             name="planEstudiosId"
                             value={form.planEstudiosId}
                             onChange={handleChange}
                             required
-                            maxLength={24}
                         />
                     </div>
                     <div className={styles.buttonRow}>
-                        <button
-                            className={styles.btn + " " + styles.btnPrimary}
-                            type="submit"
-                            disabled={loading}
-                        >
-                            {editId ? "Guardar cambios" : "Crear semestre"}
+                        <button className={styles.btn + " " + styles.btnPrimary} type="submit">
+                            Guardar semestre
                         </button>
-                        {editId && (
-                            <button
-                                className={styles.btn + " " + styles.btnSecondary}
-                                type="button"
-                                onClick={handleCancelEdit}
-                                disabled={loading}
-                            >
-                                Cancelar
-                            </button>
-                        )}
                     </div>
                 </form>
-            </div>
-
-            <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>Listado de semestres</h2>
-                <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Asignaturas</th>
-                            <th>Plan de Estudios</th>
-                            <th>Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {semestres.length === 0 && (
-                            <tr>
-                                <td colSpan={6}>No hay semestres registrados.</td>
-                            </tr>
-                        )}
-                        {semestres.map((sem) => (
-                            <tr key={sem.id}>
-                                <td>{sem.numero}</td>
-                                <td>{sem.nombre}</td>
-                                <td>{sem.descripcion}</td>
-                                <td>
-                                    {Array.isArray(sem.asignaturas)
-                                        ? sem.asignaturas.join(", ")
-                                        : ""}
-                                </td>
-                                <td>{sem.planEstudiosId}</td>
-                                <td>
-                                    <div className={styles.actionButtons}>
-                                        <button
-                                            className={styles.btn + " " + styles.btnEdit}
-                                            onClick={() => handleEdit(sem)}
-                                            disabled={loading}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            className={styles.btn + " " + styles.btnSecondary}
-                                            onClick={() => handleDelete(sem.id)}
-                                            disabled={loading}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     );

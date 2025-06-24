@@ -48,6 +48,7 @@ export default function AsignaturaForm({
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
+        // @ts-ignore
         const { name, value, type, checked } = e.target;
         setForm((prev) => ({
             ...prev,

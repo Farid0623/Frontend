@@ -1,201 +1,200 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useState } from "react";
 import styles from "./styles.module.css";
 
-type AsignaturaDTO = {
-    id?: string;
-    codigo: string;
-    nombre: string;
-    creditos: number;
-    horasTeoricas: number;
-    horasPracticas: number;
-    descripcion: string;
-    activa: boolean;
-    estado: string;
-    prerrequisitos: string[];
-    horarios: string[];
-    numeroSemestre: number;
-};
+export default function AsignaturaPage() {
+    const [form, setForm] = useState({
+        codigo: "",
+        nombre: "",
+        creditos: 0,
+        horasTeoricas: 0,
+        horasPracticas: 0,
+        semestre: 1,
+        activa: true,
+        estado: "ACTIVA",
+        descripcion: "",
+        prerrequisitos: [],
+        prerreqInput: "",
+        horarios: [],
+        horarioInput: "",
+    });
 
-const emptyForm: AsignaturaDTO = {
-    codigo: "",
-    nombre: "",
-    creditos: 0,
-    horasTeoricas: 0,
-    horasPracticas: 0,
-    descripcion: "",
-    activa: true,
-    estado: "ACTIVA",
-    prerrequisitos: [],
-    horarios: [],
-    numeroSemestre: 1,
-};
-
-export default function Page() {
-    const [asignaturas, setAsignaturas] = useState<AsignaturaDTO[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [form, setForm] = useState<AsignaturaDTO>({ ...emptyForm });
-
-    const fetchAsignaturas = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch("http://localhost:8080/api/asignaturas");
-            setAsignaturas(await res.json());
-        } catch {}
-        setLoading(false);
-    };
-
-    useEffect(() => { fetchAsignaturas(); }, []);
-
-    const handleDelete = async (id: string) => {
-        await fetch(`http://localhost:8080/api/asignaturas/${id}`, { method: "DELETE" });
-        fetchAsignaturas();
-    };
-
-    const handleChange = (e: any) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type, checked } = e.target;
         setForm((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : value,
+            [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : value,
         }));
     };
 
-    const handleArrayChange = (e: any) => {
-        const { name, value } = e.target;
+    // Tags de prerrequisitos
+    const handlePrerreqKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === ",") && form.prerreqInput.trim()) {
+            e.preventDefault();
+            if (!form.prerrequisitos.includes(form.prerreqInput.trim())) {
+                setForm((prev) => ({
+                    ...prev,
+                    prerrequisitos: [...prev.prerrequisitos, form.prerreqInput.trim()],
+                    prerreqInput: "",
+                }));
+            }
+        }
+        if (e.key === "Backspace" && form.prerreqInput === "" && form.prerrequisitos.length > 0) {
+            setForm((prev) => ({
+                ...prev,
+                prerrequisitos: prev.prerrequisitos.slice(0, -1),
+            }));
+        }
+    };
+    const handlePrerreqInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm((prev) => ({ ...prev, prerreqInput: e.target.value.replace(",", "") }));
+    };
+    const removePrerrequisito = (i: number) => {
         setForm((prev) => ({
             ...prev,
-            [name]: value.split(",").map((v: string) => v.trim()).filter((v: string) => v),
+            prerrequisitos: prev.prerrequisitos.filter((_, idx) => idx !== i),
         }));
     };
 
-    const handleSubmit = async (e: any) => {
+    // Tags de horarios
+    const handleHorarioKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === ",") && form.horarioInput.trim()) {
+            e.preventDefault();
+            if (!form.horarios.includes(form.horarioInput.trim())) {
+                setForm((prev) => ({
+                    ...prev,
+                    horarios: [...prev.horarios, form.horarioInput.trim()],
+                    horarioInput: "",
+                }));
+            }
+        }
+        if (e.key === "Backspace" && form.horarioInput === "" && form.horarios.length > 0) {
+            setForm((prev) => ({
+                ...prev,
+                horarios: prev.horarios.slice(0, -1),
+            }));
+        }
+    };
+    const handleHorarioInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setForm((prev) => ({ ...prev, horarioInput: e.target.value.replace(",", "") }));
+    };
+    const removeHorario = (i: number) => {
+        setForm((prev) => ({
+            ...prev,
+            horarios: prev.horarios.filter((_, idx) => idx !== i),
+        }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        await fetch("http://localhost:8080/api/asignaturas", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
+        alert("Materia creada (simulación).");
+        setForm({
+            codigo: "",
+            nombre: "",
+            creditos: 0,
+            horasTeoricas: 0,
+            horasPracticas: 0,
+            semestre: 1,
+            activa: true,
+            estado: "ACTIVA",
+            descripcion: "",
+            prerrequisitos: [],
+            prerreqInput: "",
+            horarios: [],
+            horarioInput: "",
         });
-        setForm({ ...emptyForm });
-        fetchAsignaturas();
     };
 
     return (
         <div className={styles.body}>
-            <div className={styles.header}>
-                <div className={styles["logo-box"]}>
-                    <Image
-                        src="/humboldt_logo.png"
-                        alt="Logo Humboldt"
-                        width={52}
-                        height={52}
-                        priority
-                    />
-                    <div className={styles["logo-txt"]}>Humboldt</div>
-                </div>
-                <span className={styles["header-title"]}>Gestión de Asignaturas</span>
+            <div className={styles.sectionHeader}>
+                <h1 className={styles.title}>Gestión de Asignaturas</h1>
             </div>
-            <div className={styles["main-content"]}>
-                <h2 className={styles.titulo}>Crear nueva asignatura</h2>
-                <form className={styles.card} style={{ marginBottom: 32 }} onSubmit={handleSubmit}>
+            <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>Crear nueva asignatura</h2>
+                <form className={styles.card} onSubmit={handleSubmit}>
                     <div className={styles.formRow}>
                         <label>Código</label>
-                        <input name="codigo" value={form.codigo} onChange={handleChange} required />
+                        <input type="text" name="codigo" value={form.codigo} onChange={handleChange} required />
                     </div>
                     <div className={styles.formRow}>
                         <label>Nombre</label>
-                        <input name="nombre" value={form.nombre} onChange={handleChange} required />
+                        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
                     </div>
                     <div className={styles.formRow}>
                         <label>Créditos</label>
-                        <input type="number" name="creditos" value={form.creditos} onChange={handleChange} required />
+                        <input type="number" name="creditos" min={0} value={form.creditos} onChange={handleChange} required />
                     </div>
                     <div className={styles.formRow}>
                         <label>Horas Teóricas</label>
-                        <input type="number" name="horasTeoricas" value={form.horasTeoricas} onChange={handleChange} required />
+                        <input type="number" name="horasTeoricas" min={0} value={form.horasTeoricas} onChange={handleChange} required />
                     </div>
                     <div className={styles.formRow}>
                         <label>Horas Prácticas</label>
-                        <input type="number" name="horasPracticas" value={form.horasPracticas} onChange={handleChange} required />
+                        <input type="number" name="horasPracticas" min={0} value={form.horasPracticas} onChange={handleChange} required />
                     </div>
                     <div className={styles.formRow}>
                         <label>Semestre</label>
-                        <input type="number" name="numeroSemestre" value={form.numeroSemestre} onChange={handleChange} required />
+                        <input type="number" name="semestre" min={1} value={form.semestre} onChange={handleChange} required />
                     </div>
-                    <div className={styles.formRow}>
+                    <div className={styles.formRowCheckbox}>
                         <label>Activa</label>
                         <input type="checkbox" name="activa" checked={form.activa} onChange={handleChange} />
                     </div>
                     <div className={styles.formRow}>
                         <label>Estado</label>
-                        <select name="estado" value={form.estado} onChange={handleChange}>
-                            <option value="ACTIVA">ACTIVA</option>
-                            <option value="INACTIVA">INACTIVA</option>
-                        </select>
+                        <input type="text" name="estado" value={form.estado} readOnly />
                     </div>
                     <div className={styles.formRow}>
                         <label>Descripción</label>
-                        <textarea name="descripcion" value={form.descripcion} onChange={handleChange} />
+                        <textarea name="descripcion" rows={2} value={form.descripcion} onChange={handleChange} maxLength={200} />
                     </div>
                     <div className={styles.formRow}>
-                        <label>Prerrequisitos (IDs separados por coma)</label>
-                        <input
-                            name="prerrequisitos"
-                            value={form.prerrequisitos.join(",")}
-                            onChange={handleArrayChange}
-                            placeholder="Ej: 1,2,3"
-                        />
+                        <label>Prerrequisitos (IDs, presiona Enter o coma para agregar)</label>
+                        <div className={styles.tagsInputWrapper}>
+                            {form.prerrequisitos.map((tag, idx) => (
+                                <span className={styles.tag} key={idx}>
+                  {tag}
+                                    <button type="button" className={styles.removeTagBtn} onClick={() => removePrerrequisito(idx)} title="Quitar prerrequisito">
+                    ×
+                  </button>
+                </span>
+                            ))}
+                            <input
+                                className={styles.asignaturaInput}
+                                value={form.prerreqInput}
+                                onChange={handlePrerreqInputChange}
+                                onKeyDown={handlePrerreqKeyDown}
+                                placeholder="Ej: 1,2,3"
+                            />
+                        </div>
                     </div>
                     <div className={styles.formRow}>
-                        <label>Horarios (separados por coma)</label>
-                        <input
-                            name="horarios"
-                            value={form.horarios.join(",")}
-                            onChange={handleArrayChange}
-                            placeholder="Ej: Lunes 8-10, Miércoles 10-12"
-                        />
+                        <label>Horarios (presiona Enter o coma para agregar)</label>
+                        <div className={styles.tagsInputWrapper}>
+                            {form.horarios.map((tag, idx) => (
+                                <span className={styles.tag} key={idx}>
+                  {tag}
+                                    <button type="button" className={styles.removeTagBtn} onClick={() => removeHorario(idx)} title="Quitar horario">
+                    ×
+                  </button>
+                </span>
+                            ))}
+                            <input
+                                className={styles.asignaturaInput}
+                                value={form.horarioInput}
+                                onChange={handleHorarioInputChange}
+                                onKeyDown={handleHorarioKeyDown}
+                                placeholder="Ej: Lunes 8-10"
+                            />
+                        </div>
                     </div>
-                    <button className={styles.btn + " " + styles["btn-primary"]} type="submit" disabled={loading}>
-                        Crear materia
-                    </button>
+                    <div className={styles.buttonRow}>
+                        <button className={styles.btn + " " + styles.btnPrimary} type="submit">
+                            Crear materia
+                        </button>
+                    </div>
                 </form>
-
-                <h2 className={styles.titulo}>Listado de asignaturas</h2>
-                <table className={styles.table}>
-                    <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Créditos</th>
-                        <th>Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {asignaturas.length === 0 && (
-                        <tr>
-                            <td colSpan={4}>No hay asignaturas registradas.</td>
-                        </tr>
-                    )}
-                    {asignaturas.map((a) => (
-                        <tr key={a.id}>
-                            <td>{a.codigo}</td>
-                            <td>{a.nombre}</td>
-                            <td>{a.creditos}</td>
-                            <td>
-                                <Link href={`/asignatura/${a.id}`}>
-                                    <button className={styles.btn + " " + styles["btn-view"]}>Ver</button>
-                                </Link>
-                                <Link href={`/asignatura/${a.id}/editar`}>
-                                    <button className={styles.btn + " " + styles["btn-edit"]}>Editar</button>
-                                </Link>
-                                <button className={styles.btn + " " + styles["btn-secondary"]} onClick={() => handleDelete(a.id!)}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import logo from "../../public/humboldt_logo.png"; // Guarda la imagen como humboldt_logo.png en src
+import logo from "../../public/humboldt_logo.svg"; // Guarda la imagen como humboldt_logo.png en src
 
 const initialForm = {
     codigo: "",

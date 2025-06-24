@@ -1,11 +1,12 @@
-import MainMenu from "@/components/MainMenu";
+import "./globals.css";
+import Header from "@/components/Header";
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="es">
         <body>
-        <MainMenu />
-        {children}
+        <Header />
+        <main className="main-bg">{children}</main>
         </body>
         </html>
     );

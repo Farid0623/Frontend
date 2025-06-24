@@ -1,11 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import styles from "./styles.module.css";
-import MainMenu from "@/components/MainMenu";
 
 type PlanEstudiosDTO = {
-    id?: string;
+    _id?: string;
     nombre: string;
     codigo: string;
     duracionSemestres: number;
@@ -13,48 +11,162 @@ type PlanEstudiosDTO = {
     facultad: string;
     programa: string;
     activo: boolean;
-    semestres: (string | number)[];
-};
-
-const emptyForm: PlanEstudiosDTO = {
-    nombre: "",
-    codigo: "",
-    duracionSemestres: 1,
-    descripcion: "",
-    facultad: "",
-    programa: "",
-    activo: true,
-    semestres: [],
+    semestres: number[];
+    semestreInput: string;
+    asignaturasPorSemestre: { [semestre: number]: string[] };
+    asignaturaInput: string;
+    semestreAsignaturasSelect: number;
 };
 
 export default function PlanEstudiosPage() {
-    const [planes, setPlanes] = useState<PlanEstudiosDTO[]>([]);
-    const [form, setForm] = useState<PlanEstudiosDTO>({ ...emptyForm });
-    const [loading, setLoading] = useState(false);
-    const [editId, setEditId] = useState<string | null>(null);
+    const [form, setForm] = useState<PlanEstudiosDTO>({
+        _id: "6857aee8590352475fed1322",
+        nombre: "Ingeniería de Sistemas",
+        codigo: "IS2025",
+        duracionSemestres: 8,
+        descripcion: "Plan de estudios para Ingeniería de Sistemas.",
+        facultad: "Ingeniería",
+        programa: "Sistemas",
+        activo: true,
+        semestres: [1,2,3,4,5,6,7,8],
+        semestreInput: "",
+        asignaturasPorSemestre: {
+            1: ["MAT101", "QUI103"],
+            2: ["FIS102", "BIO104"],
+            3: [],
+            4: [],
+            5: [],
+            6: [],
+            7: [],
+            8: [],
+        },
+        asignaturaInput: "",
+        semestreAsignaturasSelect: 1,
+    });
 
-    const fetchPlanes = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch("http://localhost:8080/api/planes-estudios");
-            const data = await res.json();
-            setPlanes(data);
-        } catch (e) {
-            alert("No se pudieron cargar los planes de estudio.");
+    // Manejo de semestres
+    const handleSemestreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if ((e.key === "Enter" || e.key === ",") && form.semestreInput.trim()) {
+            e.preventDefault();
+            const num = Number(form.semestreInput.trim());
+            if (
+                !isNaN(num) &&
+                num > 0 &&
+                num <= 20 &&
+                !form.semestres.includes(num)
+            ) {
+                setForm((f) => ({
+                    ...f,
+                    semestres: [...f.semestres, num].sort((a, b) => a - b),
+                    semestreInput: "",
+                    asignaturasPorSemestre: {
+                        ...f.asignaturasPorSemestre,
+                        [num]: [],
+                    },
+                }));
+            }
         }
-        setLoading(false);
+        if (
+            e.key === "Backspace" &&
+            form.semestreInput === "" &&
+            form.semestres.length > 0
+        ) {
+            const last = form.semestres[form.semestres.length - 1];
+            const { [last]: omit, ...rest } = form.asignaturasPorSemestre;
+            setForm((f) => ({
+                ...f,
+                semestres: f.semestres.slice(0, -1),
+                asignaturasPorSemestre: rest,
+                semestreAsignaturasSelect:
+                    f.semestres.length > 1
+                        ? f.semestres.filter((_, idx) => idx !== f.semestres.length - 1)[0]
+                        : 1,
+            }));
+        }
+    };
+    const handleSemestreInputChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => setForm((f) => ({ ...f, semestreInput: e.target.value.replace(",", "") }));
+    const removeSemestre = (i: number) => {
+        const semestre = form.semestres[i];
+        const { [semestre]: omit, ...rest } = form.asignaturasPorSemestre;
+        setForm((f) => ({
+            ...f,
+            semestres: f.semestres.filter((_, idx) => idx !== i),
+            asignaturasPorSemestre: rest,
+            semestreAsignaturasSelect:
+                f.semestres.length > 1
+                    ? f.semestres.filter((_, idx) => idx !== i)[0]
+                    : 1,
+        }));
     };
 
-    useEffect(() => {
-        fetchPlanes();
-    }, []);
+    // Asignaturas por semestre
+    const handleAsignaturaKeyDown = (
+        e: React.KeyboardEvent<HTMLInputElement>
+    ) => {
+        if (
+            (e.key === "Enter" || e.key === ",") &&
+            form.asignaturaInput.trim()
+        ) {
+            e.preventDefault();
+            const code = form.asignaturaInput.trim();
+            const sem = form.semestreAsignaturasSelect;
+            if (
+                !form.asignaturasPorSemestre[sem]?.includes(code) &&
+                code.length > 0
+            ) {
+                setForm((f) => ({
+                    ...f,
+                    asignaturasPorSemestre: {
+                        ...f.asignaturasPorSemestre,
+                        [sem]: [...(f.asignaturasPorSemestre[sem] || []), code],
+                    },
+                    asignaturaInput: "",
+                }));
+            }
+        }
+        if (
+            e.key === "Backspace" &&
+            form.asignaturaInput === "" &&
+            form.asignaturasPorSemestre[form.semestreAsignaturasSelect]?.length > 0
+        ) {
+            const sem = form.semestreAsignaturasSelect;
+            setForm((f) => ({
+                ...f,
+                asignaturasPorSemestre: {
+                    ...f.asignaturasPorSemestre,
+                    [sem]: f.asignaturasPorSemestre[sem].slice(
+                        0,
+                        f.asignaturasPorSemestre[sem].length - 1
+                    ),
+                },
+            }));
+        }
+    };
+    const handleAsignaturaInputChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => setForm((f) => ({
+        ...f,
+        asignaturaInput: e.target.value.replace(",", ""),
+    }));
+    const removeAsignatura = (i: number) => {
+        const sem = form.semestreAsignaturasSelect;
+        setForm((f) => ({
+            ...f,
+            asignaturasPorSemestre: {
+                ...f.asignaturasPorSemestre,
+                [sem]: f.asignaturasPorSemestre[sem].filter((_, idx) => idx !== i),
+            },
+        }));
+    };
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
         const { name, value, type, checked } = e.target;
-        setForm((prev) => ({
-            ...prev,
+        setForm((f) => ({
+            ...f,
             [name]:
                 type === "checkbox"
                     ? checked
@@ -64,235 +176,243 @@ export default function PlanEstudiosPage() {
         }));
     };
 
-    const handleSemestresChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            semestres: value
-                .split(",")
-                .map((v) => v.trim())
-                .filter((v) => v !== ""),
-        }));
-    };
+    const handleSemestreAsignaturasSelect = (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => setForm((f) => ({
+        ...f,
+        semestreAsignaturasSelect: Number(e.target.value),
+        asignaturaInput: "",
+    }));
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        try {
-            if (editId) {
-                await fetch(`http://localhost:8080/api/planes-estudios/${editId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(form),
-                });
-            } else {
-                await fetch("http://localhost:8080/api/planes-estudios", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(form),
-                });
-            }
-            setForm({ ...emptyForm });
-            setEditId(null);
-            fetchPlanes();
-        } catch {
-            alert("Error al guardar el plan de estudios.");
-        }
-        setLoading(false);
-    };
-
-    const handleDelete = async (id?: string) => {
-        if (!id) return;
-        if (!confirm("¿Seguro que deseas eliminar este plan de estudios?")) return;
-        setLoading(true);
-        await fetch(`http://localhost:8080/api/planes-estudios/${id}`, {
-            method: "DELETE",
-        });
-        fetchPlanes();
-        setLoading(false);
-    };
-
-    const handleEdit = (plan: PlanEstudiosDTO) => {
-        setEditId(plan.id ?? null);
-        setForm({ ...plan, semestres: plan.semestres ?? [] });
-    };
-
-    const handleCancelEdit = () => {
-        setEditId(null);
-        setForm({ ...emptyForm });
+        alert(
+            "Plan de estudios guardado (simulación):\n" +
+            JSON.stringify(
+                {
+                    ...form,
+                    semestreInput: undefined,
+                    asignaturaInput: undefined,
+                    semestreAsignaturasSelect: undefined,
+                },
+                null,
+                2
+            )
+        );
+        // Aquí puedes conectar con tu API
     };
 
     return (
         <div className={styles.body}>
-            <nav className={styles.navbar}>
-                <Link href="/asignatura" className={styles.navlink}>Asignaturas</Link>
-                <Link href="/plan-estudios" className={`${styles.navlink} ${styles.active}`}>Planes de Estudio</Link>
-            </nav>
-            <h1 className={styles.headerTitle}>Gestión de Planes de Estudio</h1>
-            <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>
-                    {editId ? "Editar plan de estudios" : "Crear nuevo plan de estudios"}
-                </h2>
+            <div className={styles.sectionHeader}>
+                <h1 className={styles.title}>Plan de Estudios</h1>
+            </div>
+            <div className={styles.formContainer}>
                 <form className={styles.card} onSubmit={handleSubmit}>
-                    <div className={styles.formRow}>
-                        <label>Nombre</label>
-                        <input
-                            name="nombre"
-                            value={form.nombre}
-                            onChange={handleChange}
-                            required
-                            maxLength={60}
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Código</label>
-                        <input
-                            name="codigo"
-                            value={form.codigo}
-                            onChange={handleChange}
-                            required
-                            maxLength={15}
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Duración (semestres)</label>
-                        <input
-                            type="number"
-                            name="duracionSemestres"
-                            value={form.duracionSemestres}
-                            onChange={handleChange}
-                            min={1}
-                            max={20}
-                            required
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Facultad</label>
-                        <input
-                            name="facultad"
-                            value={form.facultad}
-                            onChange={handleChange}
-                            required
-                            maxLength={40}
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Programa</label>
-                        <input
-                            name="programa"
-                            value={form.programa}
-                            onChange={handleChange}
-                            required
-                            maxLength={40}
-                        />
-                    </div>
-                    <div className={styles.formRowCheckbox}>
-                        <label>Activo</label>
-                        <input
-                            type="checkbox"
-                            name="activo"
-                            checked={form.activo}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Semestres (IDs o números, separados por coma)</label>
-                        <input
-                            name="semestres"
-                            value={form.semestres.join(",")}
-                            onChange={handleSemestresChange}
-                            placeholder="Ej: 1,2,3,4,5..."
-                        />
-                    </div>
-                    <div className={styles.formRow}>
-                        <label>Descripción</label>
-                        <textarea
-                            name="descripcion"
-                            value={form.descripcion}
-                            onChange={handleChange}
-                            rows={3}
-                            maxLength={200}
-                        />
-                    </div>
+                    <section className={styles.formSection}>
+                        <h2 className={styles.sectionTitle}>Datos generales</h2>
+                        <div className={styles.formRow}>
+                            <label>ID (sólo lectura)</label>
+                            <input
+                                type="text"
+                                name="_id"
+                                value={form._id ?? ""}
+                                readOnly
+                            />
+                        </div>
+                        <div className={styles.rowDouble}>
+                            <div className={styles.formRow}>
+                                <label>Nombre</label>
+                                <input
+                                    type="text"
+                                    name="nombre"
+                                    value={form.nombre}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className={styles.formRow}>
+                                <label>Código</label>
+                                <input
+                                    type="text"
+                                    name="codigo"
+                                    value={form.codigo}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className={styles.rowDouble}>
+                            <div className={styles.formRow}>
+                                <label>Facultad</label>
+                                <input
+                                    type="text"
+                                    name="facultad"
+                                    value={form.facultad}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className={styles.formRow}>
+                                <label>Programa</label>
+                                <input
+                                    type="text"
+                                    name="programa"
+                                    value={form.programa}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className={styles.formRow}>
+                            <label>Descripción</label>
+                            <textarea
+                                name="descripcion"
+                                rows={3}
+                                value={form.descripcion}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </section>
+                    <section className={styles.formSection}>
+                        <h2 className={styles.sectionTitle}>Estructura</h2>
+                        <div className={styles.rowDouble}>
+                            <div className={styles.formRow}>
+                                <label>Duración (semestres)</label>
+                                <input
+                                    type="number"
+                                    name="duracionSemestres"
+                                    min={1}
+                                    value={form.duracionSemestres}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className={styles.formRowCheckbox}>
+                                <label>Activo</label>
+                                <input
+                                    type="checkbox"
+                                    name="activo"
+                                    checked={form.activo}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                        <div className={styles.formRow}>
+                            <label>
+                                Semestres{" "}
+                                <span className={styles.hint}>
+                  (Enter o coma para agregar)
+                </span>
+                            </label>
+                            <div className={styles.tagsInputWrapper}>
+                                {form.semestres.map((num, idx) => (
+                                    <span className={styles.tag} key={idx}>
+                    {num}
+                                        <button
+                                            type="button"
+                                            className={styles.removeTagBtn}
+                                            onClick={() => removeSemestre(idx)}
+                                            title="Quitar semestre"
+                                        >
+                      ×
+                    </button>
+                  </span>
+                                ))}
+                                <input
+                                    className={styles.asignaturaInput}
+                                    value={form.semestreInput}
+                                    onChange={handleSemestreInputChange}
+                                    onKeyDown={handleSemestreKeyDown}
+                                    placeholder="Ej: 9"
+                                    type="number"
+                                    min={1}
+                                    max={20}
+                                />
+                            </div>
+                        </div>
+                        <div className={styles.formRow}>
+                            <label>
+                                Selecciona semestre para agregar sus asignaturas
+                            </label>
+                            <select
+                                value={form.semestreAsignaturasSelect}
+                                onChange={handleSemestreAsignaturasSelect}
+                                className={styles.semestreSelect}
+                            >
+                                {form.semestres.map((num) => (
+                                    <option key={num} value={num}>
+                                        Semestre {num}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className={styles.formRow}>
+                            <label>
+                                Asignaturas de semestre <b>{form.semestreAsignaturasSelect}</b>{" "}
+                                <span className={styles.hint}>
+                  (Enter o coma para agregar)
+                </span>
+                            </label>
+                            <div className={styles.tagsInputWrapper}>
+                                {(form.asignaturasPorSemestre[form.semestreAsignaturasSelect] ||
+                                    []).map((cod, idx) => (
+                                    <span className={styles.tag} key={idx}>
+                    {cod}
+                                        <button
+                                            type="button"
+                                            className={styles.removeTagBtn}
+                                            onClick={() => removeAsignatura(idx)}
+                                            title="Quitar asignatura"
+                                        >
+                      ×
+                    </button>
+                  </span>
+                                ))}
+                                <input
+                                    className={styles.asignaturaInput}
+                                    value={form.asignaturaInput}
+                                    onChange={handleAsignaturaInputChange}
+                                    onKeyDown={handleAsignaturaKeyDown}
+                                    placeholder="Ej: MAT201"
+                                />
+                            </div>
+                        </div>
+                    </section>
                     <div className={styles.buttonRow}>
                         <button
                             className={styles.btn + " " + styles.btnPrimary}
                             type="submit"
-                            disabled={loading}
                         >
-                            {editId ? "Guardar cambios" : "Crear plan"}
+                            Guardar plan de estudios
                         </button>
-                        {editId && (
-                            <button
-                                className={styles.btn + " " + styles.btnSecondary}
-                                type="button"
-                                onClick={handleCancelEdit}
-                                disabled={loading}
-                            >
-                                Cancelar
-                            </button>
-                        )}
                     </div>
                 </form>
             </div>
-
-            <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>Listado de planes de estudios</h2>
-                <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                        <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Código</th>
-                            <th>Duración</th>
-                            <th>Facultad</th>
-                            <th>Programa</th>
-                            <th>Activo</th>
-                            <th>Semestres</th>
-                            <th>Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {planes.length === 0 && (
-                            <tr>
-                                <td colSpan={8}>No hay planes de estudio registrados.</td>
-                            </tr>
-                        )}
-                        {planes.map((plan) => (
-                            <tr key={plan.id}>
-                                <td>{plan.nombre}</td>
-                                <td>{plan.codigo}</td>
-                                <td>{plan.duracionSemestres}</td>
-                                <td>{plan.facultad}</td>
-                                <td>{plan.programa}</td>
-                                <td>
-                    <span className={plan.activo ? styles.activeYes : styles.activeNo}>
-                      {plan.activo ? "Sí" : "No"}
-                    </span>
-                                </td>
-                                <td>{Array.isArray(plan.semestres) ? plan.semestres.join(", ") : ""}</td>
-                                <td>
-                                    <div className={styles.actionButtons}>
-                                        <button
-                                            className={styles.btn + " " + styles.btnEdit}
-                                            onClick={() => handleEdit(plan)}
-                                            disabled={loading}
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            className={styles.btn + " " + styles.btnSecondary}
-                                            onClick={() => handleDelete(plan.id)}
-                                            disabled={loading}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
+            <div className={styles.visualContainer}>
+                <h2 className={styles.visualTitle}>Visualización del Plan</h2>
+                <div className={styles.semestresGrid}>
+                    {form.semestres.map((num) => (
+                        <div className={styles.semestreCard} key={num}>
+                            <div className={styles.semestreHeader}>
+                                <div className={styles.semestreCircle}>{num}</div>
+                                <span>Semestre {num}</span>
+                            </div>
+                            <ul className={styles.asignaturasList}>
+                                {(form.asignaturasPorSemestre[num] || []).length === 0 ? (
+                                    <li className={styles.sombra}>Sin asignaturas</li>
+                                ) : (
+                                    form.asignaturasPorSemestre[num].map((cod, idx) => (
+                                        <li key={idx}>
+                                            <span className={styles.asignaturaBullet}></span>
+                                            {cod}
+                                        </li>
+                                    ))
+                                )}
+                            </ul>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
