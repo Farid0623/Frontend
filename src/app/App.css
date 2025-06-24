@@ -1,0 +1,123 @@
+body {
+    background: #f8f9fb;
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.App {
+    max-width: 500px;
+    margin: 36px auto;
+    padding: 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 8px #1e385b22;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: 8px;
+}
+
+h1 {
+    color: #1E385B;
+    font-size: 1.7rem;
+    margin: 0;
+}
+
+.card {
+    background: #fff;
+    border: 2px solid #1E385B;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 8px #b41e2c22;
+}
+
+.form-row {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: 600;
+    color: #1E385B;
+    margin-bottom: 4px;
+}
+
+input, textarea, select {
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid #b41e2c66;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #b41e2c;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.horarios-box {
+    display: flex;
+    gap: 8px;
+}
+
+.add-btn, .remove-btn, .submit-btn {
+    background: #b41e2c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: background 0.2s;
+}
+
+.add-btn:hover, .remove-btn:hover, .submit-btn:hover {
+    background: #1E385B;
+}
+
+.horarios-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+}
+
+.horarios-list li {
+    display: flex;
+    align-items: center;
+    background: #f5f7fa;
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    color: #1E385B;
+    font-size: 0.97rem;
+}
+
+.respuesta {
+    border-color: #b41e2c;
+    color: #1E385B;
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 12px;
+    background: #1E385B;
+}
+
+.submit-btn:disabled {
+    background: #b41e2c88;
+    cursor: not-allowed;
+}
